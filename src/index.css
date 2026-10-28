@@ -1,0 +1,53 @@
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', Tahoma, sans-serif;
+  background: #2b2f36;
+  -webkit-font-smoothing: antialiased;
+}
+/* واجهة المعاينة (الشل فقط — صفحات الـ PDF تبقى بمقاسها الثابت) */
+.pm-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.pm-topbar .pm-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.pm-topbar .pm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+button { touch-action: manipulation; }
+button:focus-visible {
+  outline: 2px solid #E69F00;
+  outline-offset: 2px;
+}
+/* الهاتف: شريط مدمج وأزرار أصغر */
+@media (max-width: 640px) {
+  .pm-topbar {
+    gap: 8px;
+    font-size: 12px !important;
+  }
+  .pm-topbar .pm-title { font-size: 12px; max-width: 38vw; }
+  .pm-topbar .pm-actions { gap: 6px; }
+  .pm-topbar button {
+    padding-block: 6px !important;
+    padding-inline: 8px !important;
+    font-size: 12px !important;
+    min-height: 36px;
+  }
+}
+@media print {
+  body { background: #fff; }
+  header, p { display: none !important; }
+  main { display: block !important; padding: 0 !important; }
+  .pdf-page { box-shadow: none !important; break-after: page; page-break-after: always; }
+}
