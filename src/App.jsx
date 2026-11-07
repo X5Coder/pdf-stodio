@@ -667,7 +667,7 @@ export default function App() {
         </BrowserRouter>
       </DSProvider>
       {exporting && (
-        <div ref={exportHostRef} style={{ position: 'fixed', left: -100000, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none' }} aria-hidden="true">
+        <div ref={exportHostRef} style={{ position: 'fixed', left: '-200vw', top: 0, width: 'max-content', height: 'max-content', overflow: 'hidden', pointerEvents: 'none', zIndex: -1 }} aria-hidden="true">
           <DSProvider config={dsConfig}>
             {pages.map((PageComp, i) => (
               <PageComp key={i} pageNo={i + 1} total={pages.length} />
