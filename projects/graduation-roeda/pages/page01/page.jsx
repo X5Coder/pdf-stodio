@@ -1,13 +1,15 @@
-import { Page } from '@ds/index.js';
+import { Page, useDS } from '@ds/index.js';
 
 const C = {
-  black: '#121212',
-  gold: '#B8913A',
-  beige: '#F3EBDA',
-  text: '#2E2A22',
-  goldSoft: '#D8C595',
-  goldDark: '#8C6D2B',
-  white: '#FFFFFF',
+  bg: '#FBFAF7',
+  paper: '#FFFFFF',
+  ink: '#1F2937',
+  text: '#374151',
+  muted: '#6B7280',
+  gold: '#B89B5E',
+  goldLine: '#D8C9A3',
+  panel: '#F4F1EA',
+  dark: '#262626',
 };
 
 const students = [
@@ -23,156 +25,138 @@ const students = [
 ];
 
 export default function Page01({ pageNo = 1, total = 1 }) {
+  const { dims } = useDS();
+  const sidePull = Math.max(0, (dims?.marginX || 0) - 18);
+
   return (
     <Page pageNo={pageNo} total={total} footer={false}>
       <div
         style={{
           height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          background: C.white,
-          color: C.text,
           boxSizing: 'border-box',
+          background: C.bg,
+          color: C.text,
+          padding: '8px 4px',
+          marginInline: -sidePull,
+          fontFamily: 'Arial, Tahoma, sans-serif',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ textAlign: 'center', paddingTop: 4, paddingBottom: 10 }}>
-          <div
-            style={{
-              color: C.gold,
-              fontSize: 14,
-              letterSpacing: '1px',
-              marginBottom: 6,
-              fontWeight: 400,
-            }}
-          >
-            GRADUATION PROJECT • 2026
-          </div>
-        </div>
-        <div style={{ height: 4, background: C.gold, width: '100%', flexShrink: 0 }} />
-
-        <div style={{ padding: '22px 24px 10px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: C.black, marginBottom: 8 }}>
-            اسم المشروع :
-          </div>
-          <h1
-            style={{
-              margin: 0,
-              color: C.black,
-              fontSize: 34,
-              lineHeight: 1.45,
-              fontWeight: 700,
-              fontFamily: "'Sakkal Majalla', 'Traditional Arabic', Arial, Tahoma, sans-serif",
-            }}
-          >
-            فاعلية استراتيجية لعب الأدوار الإلكترونية في تنمية
-            <br />
-            مهارات الحوار و خفض القلق اللغوي لدى
-            <br />
-            تلاميذ الصف الرابع الإبتدائي
-          </h1>
-        </div>
-
-        <div style={{ height: 1, background: C.goldSoft, margin: '14px 0 0 0', flexShrink: 0 }} />
-
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
-            display: 'grid',
-            gridTemplateColumns: '1.55fr 1fr',
-            gap: 0,
-            marginTop: 16,
+            height: '100%',
+            background: C.paper,
+            border: `1px solid ${C.goldLine}`,
+            boxSizing: 'border-box',
+            padding: '18px 14px 14px 14px',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <div
-            style={{
-              padding: '0 18px 0 22px',
-              borderLeft: `2px solid ${C.gold}`,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
+          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <div style={{ color: C.gold, fontSize: 13, fontWeight: 700, letterSpacing: '1px' }}>
+              GRADUATION PROJECT • 2026
+            </div>
+          </div>
+          <div style={{ height: 2, background: C.gold, margin: '0 24px 18px 24px' }} />
+
+          <div style={{ textAlign: 'center', padding: '0 4px 14px 4px' }}>
+            <div style={{ color: C.muted, fontSize: 18, fontWeight: 700, marginBottom: 10 }}>اسم المشروع :</div>
+            <h1
               style={{
-                textAlign: 'center',
-                fontSize: 20,
+                margin: 0,
+                color: C.ink,
+                fontSize: 36,
+                lineHeight: 1.42,
                 fontWeight: 700,
-                color: C.black,
-                borderBottom: `1px solid ${C.gold}`,
-                paddingBottom: 6,
-                marginBottom: 14,
+                fontFamily: "'Sakkal Majalla', 'Traditional Arabic', Arial, Tahoma, sans-serif",
               }}
             >
-              عمل الطلاب :
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                columnGap: 18,
-                rowGap: 10,
-                alignContent: 'start',
-              }}
-            >
-              {students.map((name) => (
-                <div
-                  key={name}
-                  style={{
-                    fontSize: 17,
-                    color: C.text,
-                    lineHeight: 1.4,
-                    textAlign: 'center',
-                  }}
-                >
-                  <span style={{ color: C.gold }}>&#9670;</span>&nbsp; {name}
-                </div>
-              ))}
-            </div>
+              فاعلية استراتيجية لعب الأدوار الإلكترونية في تنمية
+              <br />
+              مهارات الحوار و خفض القلق اللغوي لدى
+              <br />
+              تلاميذ الصف الرابع الإبتدائي
+            </h1>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '6px 0 18px 0' }}>
+            <div style={{ flex: 1, height: 1, background: C.goldLine }} />
+            <div style={{ width: 7, height: 7, background: C.gold }} />
+            <div style={{ flex: 1, height: 1, background: C.goldLine }} />
           </div>
 
           <div
             style={{
-              padding: '0 22px 0 18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              color: C.ink,
+              fontSize: 22,
+              fontWeight: 700,
+              marginBottom: 12,
+              paddingBottom: 8,
+              borderBottom: `2px solid ${C.gold}`,
+              textAlign: 'center',
             }}
           >
-            <div style={{ width: '100%', maxWidth: 360 }}>
+            عمل الطلاب :
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              columnGap: 14,
+              rowGap: 10,
+              alignContent: 'start',
+              marginBottom: 18,
+            }}
+          >
+            {students.map((name) => (
               <div
+                key={name}
                 style={{
-                  background: C.beige,
-                  borderTop: `2px solid ${C.gold}`,
-                  borderBottom: `2px solid ${C.gold}`,
-                  padding: '18px 16px',
+                  color: C.text,
+                  fontSize: 17,
+                  lineHeight: 1.35,
+                  padding: '10px 12px',
+                  background: C.bg,
+                  border: `1px solid ${C.goldLine}`,
                   textAlign: 'center',
                 }}
               >
-                <div style={{ color: C.gold, fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
-                  تحت إشراف دكتور :
-                </div>
-                <div
-                  style={{
-                    color: C.black,
-                    fontSize: 28,
-                    fontWeight: 700,
-                    fontFamily: "'Sakkal Majalla', 'Traditional Arabic', Arial, Tahoma, sans-serif",
-                  }}
-                >
-                  شيماء سعيد
-                </div>
+                {name}
               </div>
-              <div
-                style={{
-                  marginTop: 14,
-                  textAlign: 'center',
-                  color: C.goldDark,
-                  fontSize: 13,
-                }}
-              >
-                مشروع تخرج • صفحة 1
-              </div>
+            ))}
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          <div
+            style={{
+              background: C.dark,
+              color: C.paper,
+              padding: '18px 18px',
+              textAlign: 'center',
+              borderTop: `4px solid ${C.gold}`,
+            }}
+          >
+            <div style={{ color: C.goldLine, fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
+              تحت إشراف دكتور :
             </div>
+            <div
+              style={{
+                color: C.paper,
+                fontSize: 34,
+                fontWeight: 700,
+                lineHeight: 1.2,
+                fontFamily: "'Sakkal Majalla', 'Traditional Arabic', Arial, Tahoma, sans-serif",
+              }}
+            >
+              شيماء سعيد
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, textAlign: 'center', color: C.muted, fontSize: 12 }}>
+            مشروع تخرج • صفحة 1
           </div>
         </div>
       </div>

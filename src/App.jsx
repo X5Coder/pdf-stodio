@@ -500,21 +500,12 @@ function AllPagesView({ projectConfig, projects, onProjectChange, activeProjectI
 }
 
 // عرض مخصص للتصدير فقط: الصفحات بمقاسها الحقيقي وبدون أي واجهة
-// (لا شريط علوي ولا ظلال) — الالتقاط يأخذ عناصر .pdf-page فقط،
-// فكل صفحة PDF = صورة واحدة للقالب كاملاً ولا شيء غيره.
+// التصدير: عرض القالب/الصفحات فقط بدون واجهة معاينة فوقها.
 function ExportView({ projectConfig, pages }) {
   const total = pages.length;
   const [params] = useSearchParams();
   const nav = useNavigate();
   const started = useRef(false);
-  const [progress, setProgress] = useState({
-    phase: 'preparing',
-    current: 0,
-    total: 0,
-    percent: 0,
-    message: 'بدء تجهيز ملف PDF...'
-  });
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (params.get('run') !== '1' || started.current) return;
@@ -523,116 +514,22 @@ function ExportView({ projectConfig, pages }) {
       try {
         await exportAllPagesToPdf({
           fileName: `${projectConfig?.name || 'document'}.pdf`,
-          onProgress: (p) => setProgress((prev) => ({ ...prev, ...p }))
         });
-        await new Promise((r) => setTimeout(r, 450));
+        await new Promise((r) => setTimeout(r, 250));
       } catch (e) {
-        setError(e?.message || 'حدث خطأ أثناء إنشاء ملف PDF');
-        await new Promise((r) => setTimeout(r, 1400));
+        console.error(e);
+        await new Promise((r) => setTimeout(r, 600));
       } finally {
         nav(params.get('from') ?? '/all', { replace: true });
       }
     })();
   }, [params, nav, projectConfig]);
 
-  const pct = Math.max(0, Math.min(100, Number(progress.percent) || 0));
-
   return (
-    <div style={{ background: '#ffffff', minHeight: '100vh' }} dir={projectConfig?.dir || 'rtl'}>
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 16,
-          background: 'rgba(10,10,10,0.72)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)'
-        }}
-      >
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            width: '100%',
-            maxWidth: 420,
-            background: '#111111',
-            border: `1px solid ${BAR_BORDER}`,
-            borderRadius: 14,
-            padding: 16,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.55)',
-            color: '#f3f4f6'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <span
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: error ? 'rgba(239,68,68,0.16)' : 'rgba(239,68,68,0.14)',
-                border: `1px solid ${error ? 'rgba(239,68,68,0.45)' : 'rgba(239,68,68,0.35)'}`,
-                flexShrink: 0
-              }}
-            >
-              <FileDown size={16} color={error ? '#FCA5A5' : '#F87171'} />
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#ffffff' }}>
-                {error ? 'تعذر إنشاء الملف' : 'جاري تجهيز ملف PDF'}
-              </div>
-              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, lineHeight: 1.5 }}>
-                {error || progress.message || 'تحميل داخلي...'}
-              </div>
-            </div>
-            <div style={{ marginInlineStart: 'auto', fontSize: 12, fontWeight: 700, color: error ? '#FCA5A5' : '#93C5FD' }}>
-              {error ? '!' : `${pct}%`}
-            </div>
-          </div>
-
-          <div
-            style={{
-              height: 8,
-              background: '#1a1a1a',
-              border: `1px solid ${BAR_BORDER}`,
-              borderRadius: 999,
-              overflow: 'hidden'
-            }}
-          >
-            <div
-              style={{
-                width: `${error ? 100 : pct}%`,
-                height: '100%',
-                borderRadius: 999,
-                background: error ? '#EF4444' : 'linear-gradient(90deg, #EF4444 0%, #3B82F6 100%)',
-                transition: 'width 0.2s ease'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
-            <span style={{ fontSize: 10, color: '#6b7280' }}>
-              {progress.total ? `${progress.current || 0} / ${progress.total} صفحة` : 'تحميل داخلي'}
-            </span>
-            <span style={{ fontSize: 10, color: '#6b7280' }}>
-              {progress.phase === 'done' ? 'سيبدأ التنزيل الآن' : error ? 'سيتم الرجوع...' : 'يرجى الانتظار'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* الصفحات تُرسم للالتقاط فقط (التصدير يلتقط .pdf-page) والواجهة تعرض تحميلًا داخليًا */}
-      <div aria-hidden="true">
-        {pages.map((PageComp, i) => (
-          <PageComp key={i} pageNo={i + 1} total={total} />
-        ))}
-      </div>
+    <div style={{ background: '#ffffff', minHeight: '100vh', margin: 0, padding: 0 }} dir={projectConfig?.dir || 'rtl'}>
+      {pages.map((PageComp, i) => (
+        <PageComp key={i} pageNo={i + 1} total={total} />
+      ))}
     </div>
   );
 }

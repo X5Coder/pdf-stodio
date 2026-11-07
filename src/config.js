@@ -21,11 +21,11 @@ export const PROJECT_DEFAULTS = {
     title: 'دليل عملي لإعداد دراسة جدوى متكاملة',
   },
   'graduation-roeda': {
-    preset: 'slide',
+    preset: 'a4',
     theme: 'warm',
     dir: 'rtl',
     lang: 'ar',
-    orientation: 'landscape',
+    orientation: 'portrait',
     title: 'مشروع تخرج رويدا',
   },
 };
