@@ -21,14 +21,30 @@ async function waitReady() {
   await new Promise((r) => setTimeout(r, 400));
 }
 
-export async function exportAllPagesToPdf({ fileName = 'document.pdf' } = {}) {
+export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgress } = {}) {
+  const report = (payload) => {
+    if (typeof onProgress === 'function') onProgress(payload);
+  };
+
+  report({ phase: 'preparing', current: 0, total: 0, percent: 2, message: 'تجهيز الخطوط والصفحات...' });
   await waitReady();
   const nodes = Array.from(document.querySelectorAll('.pdf-page'));
   if (!nodes.length) throw new Error('لا توجد صفحات للتصدير');
 
+  const total = nodes.length;
   const pixelRatio = 2; // دقة مضاعفة لصورة حادة في الـ PDF
   let pdf = null;
   for (let i = 0; i < nodes.length; i++) {
+    const current = i + 1;
+    const renderPercent = 5 + Math.round((i / total) * 85);
+    report({
+      phase: 'rendering',
+      current,
+      total,
+      percent: renderPercent,
+      message: `معالجة الصفحة ${current} من ${total}...`
+    });
+
     const node = nodes[i];
     const w = node.offsetWidth;
     const h = node.offsetHeight;
@@ -50,8 +66,19 @@ export async function exportAllPagesToPdf({ fileName = 'document.pdf' } = {}) {
       pdf.addPage(format, orientation);
     }
     pdf.addImage(dataUrl, 'PNG', 0, 0, format[0], format[1]);
+
+    report({
+      phase: 'rendering',
+      current,
+      total,
+      percent: 5 + Math.round((current / total) * 85),
+      message: `تم تجهيز الصفحة ${current} من ${total}`
+    });
   }
+
+  report({ phase: 'saving', current: total, total, percent: 96, message: 'إنشاء ملف PDF...' });
   pdf.save(fileName);
+  report({ phase: 'done', current: total, total, percent: 100, message: 'بدأ تنزيل الملف' });
 }
 
 export async function exportSinglePageToPng(node, fileName = 'page.png') {

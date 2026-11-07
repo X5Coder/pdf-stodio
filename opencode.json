@@ -1,1 +1,8 @@
-{"$schema": "https://opencode.ai/config.json", "instructions": ["AGENTS.md", "GEMINI.md", ".agent/rules/react-rules.md", "rules/01-design-tokens.md", "rules/02-spacing-typography-colors.md", "rules/03-components-ui-libs.md", "rules/04-a11y-responsive-rtl-motion-perf.md", "rules/05-images-react.md", "rules/06-image-apis-licenses.md", "rules/07-resources-stack-checklist.md"]}
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "projects/PROJECT_SYSTEM_BASE.md",
+    "AGENTS.md",
+    "PROJECT_MAP.md"
+  ]
+}

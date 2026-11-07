@@ -1,1 +1,25 @@
-{"name":"pdf-motion","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview"},"dependencies":{"html-to-image":"^1.11.11","jspdf":"^2.5.1","lucide-react":"^1.56.0","react":"^18.3.1","react-dom":"^18.3.1","react-router-dom":"^6.23.1"},"devDependencies":{"@vitejs/plugin-react":"^4.3.1","playwright":"^1.64.0","vite":"^5.4.8"}}
+{
+  "name": "pdf-studio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PDF Studio - معاينة وتصميم وتصدير صفحات PDF ضمن مشاريع منفصلة",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "html-to-image": "^1.11.11",
+    "jspdf": "^2.5.1",
+    "lucide-react": "^1.56.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "playwright": "^1.64.0",
+    "vite": "^5.4.8"
+  }
+}

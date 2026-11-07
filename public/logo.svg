@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 40" fill="none" role="img" aria-labelledby="title">
+  <title id="title">PDF Studio</title>
+  <rect x="0" y="2" width="36" height="36" rx="10" fill="#0A0A0A"/>
+  <rect x="1" y="3" width="34" height="34" rx="9" stroke="#1F2937" stroke-width="1.5"/>
+  <path d="M10 9h11l5 5v16a2.5 2.5 0 0 1-2.5 2.5h-13.5A2.5 2.5 0 0 1 7.5 30V11.5A2.5 2.5 0 0 1 10 9Z" fill="#111827" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M21 9v5h5" fill="#1F2937" stroke="#334155" stroke-width="1.5" stroke-linejoin="round"/>
+  <rect x="11.5" y="18" width="13" height="2" rx="1" fill="#60A5FA"/>
+  <rect x="11.5" y="22" width="9.5" height="2" rx="1" fill="#475569"/>
+  <path d="M22.5 22.5h4.2a1.8 1.8 0 0 1 1.8 1.8v4.2a1.8 1.8 0 0 1-1.8 1.8h-4.2a1.8 1.8 0 0 1-1.8-1.8v-4.2a1.8 1.8 0 0 1 1.8-1.8Z" fill="#EF4444"/>
+  <path d="M23.6 24.5h1.1c1 0 1.65.58 1.65 1.5s-.65 1.5-1.65 1.5h-.45v1.15h-.65v-4.15Zm.65.58v1.84h.45c.58 0 .98-.34.98-.92s-.4-.92-.98-.92h-.45Z" fill="#fff"/>
+  <text x="46" y="18.5" fill="#F9FAFB" font-family="Arial, Tahoma, sans-serif" font-size="14" font-weight="700">PDF Studio</text>
+  <text x="46" y="31" fill="#9CA3AF" font-family="Arial, Tahoma, sans-serif" font-size="9.5" font-weight="500">معاينة وتصدير PDF</text>
+</svg>

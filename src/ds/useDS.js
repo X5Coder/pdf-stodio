@@ -1,9 +1,13 @@
 import { PDF_CONFIG } from '../config.js';
 import { PRESETS, THEMES, SERIES, FONT_FAMILY, MAX_MEASURE, getFS, getSP } from './tokens.js';
+import { useDSContext } from './context.jsx';
 
-// Hook الوحيد للوصول للـ tokens داخل الصفحات (قاعدة w2).
-// يرجع: fs للخطوط، sp للمسافات، c للألوان.
+// Hook للوصول لإعدادات/مقاسات التصميم.
+// يفضّل مصدره من DSProvider (إعدادات المشروع)، مع fallback إلى PDF_CONFIG للتوافق.
 export function useDS() {
+  const ctx = useDSContext();
+  if (ctx) return ctx;
+
   const preset = PRESETS[PDF_CONFIG.preset] ?? PRESETS.a4;
   const c = THEMES[PDF_CONFIG.theme] ?? THEMES.calm;
   const fs = getFS(PDF_CONFIG.preset);
