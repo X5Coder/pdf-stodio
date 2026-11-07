@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BrowserRouter,
   Routes,
@@ -666,14 +667,15 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </DSProvider>
-      {exporting && (
-        <div ref={exportHostRef} style={{ position: 'fixed', left: '-200vw', top: 0, width: 'max-content', height: 'max-content', overflow: 'hidden', pointerEvents: 'none', zIndex: -1 }} aria-hidden="true">
+      {exporting && typeof document !== 'undefined' && createPortal(
+        <div ref={exportHostRef} style={{ position: 'fixed', left: 0, top: 0, transform: 'translateX(-200vw)', width: 'max-content', height: 'max-content', overflow: 'visible', pointerEvents: 'none', zIndex: -1 }} aria-hidden="true">
           <DSProvider config={dsConfig}>
             {pages.map((PageComp, i) => (
               <PageComp key={i} pageNo={i + 1} total={pages.length} />
             ))}
           </DSProvider>
-        </div>
+        </div>,
+        document.body
       )}
       </div>
     </div>
