@@ -299,7 +299,12 @@ function TopBar({ current, total, onExport, projectConfig, projects, onProjectCh
           }}
         >
           {busy ? (
-            <span style={{ width: 14, height: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', animation: 'spin 1s linear infinite', fontSize: 12 }}>⏳</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style={{ display: 'block', flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="9" fill="none" stroke="rgba(252,165,165,0.35)" strokeWidth="2.5" />
+              <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="#FCA5A5" strokeWidth="2.5" strokeLinecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite" />
+              </path>
+            </svg>
           ) : (
             <FileDown size={14} color="#FCA5A5" />
           )}
