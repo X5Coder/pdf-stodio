@@ -666,52 +666,15 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </DSProvider>
-      {exporting && (() => {
-        const PreviewPage = pages[0];
-        const presetKey = dsConfig?.preset || defaults.preset || 'a4';
-        const presetDims = ({ slide: [1280, 720], a4: [794, 1123], a4l: [1123, 794], letter: [816, 1056], letterl: [1056, 816] })[presetKey] || [794, 1123];
-        const [pw, ph] = presetDims;
-        const isPortrait = (dsConfig?.orientation || (ph >= pw ? 'portrait' : 'landscape')) === 'portrait';
-        const availW = (typeof window !== 'undefined' ? window.innerWidth : 1200) - 48;
-        const availH = (typeof window !== 'undefined' ? window.innerHeight : 800) - 48;
-        const s = isPortrait
-          ? Math.max(0.2, Math.min(2, availW / pw, availH / ph))
-          : Math.max(0.2, Math.min(2, availW / 1280, availH / 720));
-        return (
-          <>
-            <div
-              style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 9998,
-                background: '#0a0a0a',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-              }}
-              aria-label="تصدير PDF"
-            >
-              {PreviewPage && (
-                <div dir="ltr" style={{ width: pw * s, height: ph * s, overflow: 'hidden', boxShadow: '0 12px 48px rgba(0,0,0,.45)' }}>
-                  <div style={{ width: pw, height: ph, transform: `scale(${s})`, transformOrigin: 'top left' }}>
-                    <DSProvider config={dsConfig}>
-                      <PreviewPage pageNo={1} total={pages.length} />
-                    </DSProvider>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div ref={exportHostRef} style={{ position: 'fixed', left: -100000, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none' }} aria-hidden="true">
-              <DSProvider config={dsConfig}>
-                {pages.map((PageComp, i) => (
-                  <PageComp key={i} pageNo={i + 1} total={pages.length} />
-                ))}
-              </DSProvider>
-            </div>
-          </>
-        );
-      })()}
+      {exporting && (
+        <div ref={exportHostRef} style={{ position: 'fixed', left: -100000, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none' }} aria-hidden="true">
+          <DSProvider config={dsConfig}>
+            {pages.map((PageComp, i) => (
+              <PageComp key={i} pageNo={i + 1} total={pages.length} />
+            ))}
+          </DSProvider>
+        </div>
+      )}
       </div>
     </div>
   );
