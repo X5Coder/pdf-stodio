@@ -21,14 +21,15 @@ async function waitReady() {
   await new Promise((r) => setTimeout(r, 400));
 }
 
-export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgress } = {}) {
+export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgress, root } = {}) {
   const report = (payload) => {
     if (typeof onProgress === 'function') onProgress(payload);
   };
 
   report({ phase: 'preparing', current: 0, total: 0, percent: 2, message: 'تجهيز الخطوط والصفحات...' });
   await waitReady();
-  const nodes = Array.from(document.querySelectorAll('.pdf-page'));
+  const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+  const nodes = Array.from(scope.querySelectorAll('.pdf-page'));
   if (!nodes.length) throw new Error('لا توجد صفحات للتصدير');
 
   const total = nodes.length;

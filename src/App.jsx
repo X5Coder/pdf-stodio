@@ -367,7 +367,7 @@ function useFitWidth(w, h, orientation = 'landscape') {
 }
 
 // عرض صفحة واحدة — تنقل بالضغط يمين/شمال والأسهم
-function SinglePageView({ projectConfig, projects, onProjectChange, activeProjectId, pages }) {
+function SinglePageView({ projectConfig, projects, onProjectChange, activeProjectId, pages, onExport }) {
   const { dims } = useDS();
   const { num } = useParams();
   const nav = useNavigate();
@@ -415,10 +415,7 @@ function SinglePageView({ projectConfig, projects, onProjectChange, activeProjec
       <TopBar
         current={current}
         total={total}
-        onExport={async () => {
-          // التصدير يتم دائماً من مسار /export المخصص: القالب كاملاً كصورة واحدة
-          nav(`/export?run=1&from=/p/${current}`);
-        }}
+        onExport={onExport}
         projectConfig={projectConfig}
         projects={projects}
         onProjectChange={onProjectChange}
@@ -468,7 +465,7 @@ function SinglePageView({ projectConfig, projects, onProjectChange, activeProjec
 }
 
 // عرض كل الصفحات بمقاسها الحقيقي — للمراجعة والتصدير (الصور فقط للـ PDF)
-function AllPagesView({ projectConfig, projects, onProjectChange, activeProjectId, pages }) {
+function AllPagesView({ projectConfig, projects, onProjectChange, activeProjectId, pages, onExport }) {
   const { dims } = useDS();
   const total = pages.length;
   const nav = useNavigate();
@@ -480,7 +477,7 @@ function AllPagesView({ projectConfig, projects, onProjectChange, activeProjectI
       <TopBar
         current={total}
         total={total}
-        onExport={() => nav('/export?run=1&from=/all')}
+        onExport={onExport}
         projectConfig={projectConfig}
         projects={projects}
         onProjectChange={onProjectChange}
@@ -540,6 +537,7 @@ export default function App() {
   const [currentProjectId, setCurrentProjectId] = useState(getCurrentProject());
   const [switching, setSwitching] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const pages = getPages(currentProjectId);
 
   useEffect(() => {
@@ -579,6 +577,23 @@ export default function App() {
     e.preventDefault();
   };
 
+  const exportHostRef = useRef(null);
+
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise((r) => setTimeout(r, 150));
+      await exportAllPagesToPdf({
+        fileName: `${projectConfig?.name || 'document'}.pdf`,
+        root: exportHostRef.current || undefined,
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const defaults = getProjectDefaults(currentProjectId);
   const dsConfig = projectConfig
     ? { ...defaults, ...projectConfig }
@@ -608,6 +623,7 @@ export default function App() {
                   onProjectChange={handleProjectChange}
                   activeProjectId={currentProjectId}
                   pages={pages}
+                  onExport={handleExport}
                 />
               }
             />
@@ -620,6 +636,7 @@ export default function App() {
                   onProjectChange={handleProjectChange}
                   activeProjectId={currentProjectId}
                   pages={pages}
+                  onExport={handleExport}
                 />
               }
             />
@@ -632,6 +649,7 @@ export default function App() {
                   onProjectChange={handleProjectChange}
                   activeProjectId={currentProjectId}
                   pages={pages}
+                  onExport={handleExport}
                 />
               }
             />
@@ -647,6 +665,15 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </DSProvider>
+      {exporting && (
+        <div ref={exportHostRef} style={{ position: 'fixed', left: -100000, top: 0, width: 0, height: 0, overflow: 'visible', pointerEvents: 'none' }} aria-hidden="true">
+          <DSProvider config={dsConfig}>
+            {pages.map((PageComp, i) => (
+              <PageComp key={i} pageNo={i + 1} total={pages.length} />
+            ))}
+          </DSProvider>
+        </div>
+      )}
       </div>
     </div>
   );
