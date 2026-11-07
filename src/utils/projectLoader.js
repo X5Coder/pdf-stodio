@@ -10,6 +10,11 @@ export async function loadProjects() {
       id: 'default',
       name: 'دليل عملي لإعداد دراسة جدوى متكاملة',
       path: 'default'
+    },
+    {
+      id: 'graduation-roeda',
+      name: 'مشروع تخرج رويدا',
+      path: 'graduation-roeda'
     }
   ];
 

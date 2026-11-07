@@ -7,8 +7,8 @@ import {
   useParams,
   useSearchParams
 } from 'react-router-dom';
-import { PAGES } from './pages/index.js';
-import { CURRENT_PROJECT, PDF_CONFIG } from './config.js';
+import { getPages } from './pages/index.js';
+import { getCurrentProject, getProjectDefaults } from './config.js';
 import { useDS, DSProvider } from './ds/index.js';
 import { exportAllPagesToPdf } from './utils/exportPdf.js';
 import { loadProjects, loadProjectConfig } from './utils/projectLoader.js';
@@ -20,7 +20,7 @@ const BAR_BG = '#0a0a0a';
 const BAR_BORDER = '#1a1a1a';
 const BAR_HOVER = '#1f1f1f';
 
-function TopBar({ current, total, onExport, projectConfig, projects, onProjectChange }) {
+function TopBar({ current, total, onExport, projectConfig, projects, onProjectChange, activeProjectId }) {
   const [busy, setBusy] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const menuRef = useRef(null);
@@ -169,7 +169,7 @@ function TopBar({ current, total, onExport, projectConfig, projects, onProjectCh
           >
             <div style={{ fontSize: '10px', color: '#6b7280', padding: '6px 8px 4px', fontWeight: 600 }}>المشاريع</div>
             {projects.map((proj) => {
-              const active = proj.id === CURRENT_PROJECT;
+              const active = proj.id === activeProjectId;
               return (
                 <button
                   key={proj.id}
@@ -323,46 +323,59 @@ const iconBtnStyle = {
   fontSize: 'inherit'
 };
 
-// ملء الشاشة: تصغير أو تكبير لتناسب المساحة (عرض فقط — التصدير دائماً بالمقاس الحقيقي).
-function useFitScale(w, h, offsetH = 76) {
-  const [s, setS] = useState(1);
-  useEffect(() => {
-    const calc = () => {
-      const availW = window.innerWidth - 32; // = main paddingInline (16×2)
-      const availH = window.innerHeight - offsetH; // الشريط العلوي + حشو المعاينة
-      setS(Math.max(0.2, Math.min(2, availW / w, availH / h)));
-    };
-    calc();
-    window.addEventListener('resize', calc);
-    return () => window.removeEventListener('resize', calc);
-  }, [w, h, offsetH]);
-  return s;
-}
-
-// ملء العرض فقط (لعرض كل الصفحات على الهاتف): تصغير ليناسب عرض الشاشة.
-function useFitWidth(w) {
+// معاينة موحدة بدون سكرول: كل الاتجاهات تُلائم الشاشة، والعرضية تتساوى بصريًا بين المشاريع.
+function usePreviewScale(w, h, orientation = 'landscape', offsetH = 76) {
   const [s, setS] = useState(1);
   useEffect(() => {
     const calc = () => {
       const availW = window.innerWidth - 32;
-      setS(Math.max(0.2, Math.min(1, availW / w)));
+      const availH = window.innerHeight - offsetH;
+      const orient = orientation || (w >= h ? 'landscape' : 'portrait');
+      if (orient === 'portrait') {
+        setS(Math.max(0.2, Math.min(2, availW / w, availH / h)));
+      } else {
+        // مرجع موحد لكل المشاريع العرضية حتى تتساوى مساحة المعاينة بصريًا
+        const refW = 1280;
+        const refH = 720;
+        setS(Math.max(0.2, Math.min(2, availW / refW, availH / refH)));
+      }
     };
     calc();
     window.addEventListener('resize', calc);
     return () => window.removeEventListener('resize', calc);
-  }, [w]);
+  }, [w, h, orientation, offsetH]);
+  return s;
+}
+
+function useFitWidth(w, h, orientation = 'landscape') {
+  const [s, setS] = useState(1);
+  useEffect(() => {
+    const calc = () => {
+      const availW = window.innerWidth - 32;
+      const orient = orientation || (w >= h ? 'landscape' : 'portrait');
+      if (orient === 'portrait') {
+        setS(Math.max(0.2, Math.min(1, availW / w))); // يحافظ على الحجم الحقيقي قدر الإمكان بدون تجاوز العرض
+      } else {
+        setS(Math.max(0.2, Math.min(1, availW / 1280))); // عرض موحد للمشاريع العرضية
+      }
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, [w, h, orientation]);
   return s;
 }
 
 // عرض صفحة واحدة — تنقل بالضغط يمين/شمال والأسهم
-function SinglePageView({ projectConfig, projects, onProjectChange }) {
+function SinglePageView({ projectConfig, projects, onProjectChange, activeProjectId, pages }) {
   const { dims } = useDS();
   const { num } = useParams();
   const nav = useNavigate();
-  const total = PAGES.length;
+  const total = pages.length;
   const current = Math.max(1, Math.min(total, parseInt(num ?? '1', 10) || 1));
-  const PageComp = PAGES[current - 1];
-  const s = useFitScale(dims.w, dims.h);
+  const PageComp = pages[current - 1];
+  const orientation = projectConfig?.orientation || (dims.w >= dims.h ? 'landscape' : 'portrait');
+  const s = usePreviewScale(dims.w, dims.h, orientation);
 
   const next = useCallback(() => {
     if (current < total) nav(`/p/${current + 1}`);
@@ -409,6 +422,7 @@ function SinglePageView({ projectConfig, projects, onProjectChange }) {
         projectConfig={projectConfig}
         projects={projects}
         onProjectChange={onProjectChange}
+        activeProjectId={activeProjectId}
       />
       <main
         onClick={onStageClick}
@@ -454,11 +468,12 @@ function SinglePageView({ projectConfig, projects, onProjectChange }) {
 }
 
 // عرض كل الصفحات بمقاسها الحقيقي — للمراجعة والتصدير (الصور فقط للـ PDF)
-function AllPagesView({ projectConfig, projects, onProjectChange }) {
+function AllPagesView({ projectConfig, projects, onProjectChange, activeProjectId, pages }) {
   const { dims } = useDS();
-  const total = PAGES.length;
+  const total = pages.length;
   const nav = useNavigate();
-  const s = useFitWidth(dims.w);
+  const orientation = projectConfig?.orientation || (dims.w >= dims.h ? 'landscape' : 'portrait');
+  const s = useFitWidth(dims.w, dims.h, orientation);
 
   return (
     <div style={{ minHeight: '100vh', background: SHELL_BG }} dir={projectConfig?.dir || 'rtl'}>
@@ -469,9 +484,10 @@ function AllPagesView({ projectConfig, projects, onProjectChange }) {
         projectConfig={projectConfig}
         projects={projects}
         onProjectChange={onProjectChange}
+        activeProjectId={activeProjectId}
       />
-      <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, paddingBlock: 32, paddingInline: 16 }}>
-        {PAGES.map((PageComp, i) => (
+      <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, paddingBlock: 32, paddingInline: 16, overflow: 'hidden' }}>
+        {pages.map((PageComp, i) => (
           <div key={i} dir="ltr" style={{ width: dims.w * s, height: dims.h * s, flexShrink: 0, overflow: 'hidden', borderRadius: 16, boxShadow: '0 12px 48px rgba(0,0,0,.45)' }}>
             <div style={{ width: dims.w, height: dims.h, transform: `scale(${s})`, transformOrigin: 'top left' }}>
               <PageComp pageNo={i + 1} total={total} />
@@ -486,8 +502,8 @@ function AllPagesView({ projectConfig, projects, onProjectChange }) {
 // عرض مخصص للتصدير فقط: الصفحات بمقاسها الحقيقي وبدون أي واجهة
 // (لا شريط علوي ولا ظلال) — الالتقاط يأخذ عناصر .pdf-page فقط،
 // فكل صفحة PDF = صورة واحدة للقالب كاملاً ولا شيء غيره.
-function ExportView({ projectConfig }) {
-  const total = PAGES.length;
+function ExportView({ projectConfig, pages }) {
+  const total = pages.length;
   const [params] = useSearchParams();
   const nav = useNavigate();
   const started = useRef(false);
@@ -613,7 +629,7 @@ function ExportView({ projectConfig }) {
 
       {/* الصفحات تُرسم للالتقاط فقط (التصدير يلتقط .pdf-page) والواجهة تعرض تحميلًا داخليًا */}
       <div aria-hidden="true">
-        {PAGES.map((PageComp, i) => (
+        {pages.map((PageComp, i) => (
           <PageComp key={i} pageNo={i + 1} total={total} />
         ))}
       </div>
@@ -624,15 +640,21 @@ function ExportView({ projectConfig }) {
 export default function App() {
   const [projects, setProjects] = useState([]);
   const [projectConfig, setProjectConfig] = useState(null);
-  const [currentProjectId, setCurrentProjectId] = useState(CURRENT_PROJECT);
+  const [currentProjectId, setCurrentProjectId] = useState(getCurrentProject());
+  const [switching, setSwitching] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const pages = getPages(currentProjectId);
 
   useEffect(() => {
-    // تحميل قائمة المشاريع
+    const t = setTimeout(() => setEntered(true), 20);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
     loadProjects().then(setProjects);
   }, []);
 
   useEffect(() => {
-    // تحميل إعدادات المشروع الحالي
     loadProjectConfig(currentProjectId).then((config) => {
       if (config) {
         setProjectConfig(config);
@@ -648,29 +670,38 @@ export default function App() {
   }, [currentProjectId]);
 
   const handleProjectChange = (projectId) => {
-    setCurrentProjectId(projectId);
-    // إعادة تحميل الصفحة لتطبيق التغيير
-    window.location.href = '/';
+    if (projectId === currentProjectId || switching) return;
+    setSwitching(true);
+    setTimeout(() => {
+      localStorage.setItem('pdf-studio-active-project', projectId);
+      window.location.href = '/';
+    }, 220);
   };
 
-  // منع النسخ في كل التطبيق
   const handleCopy = (e) => {
     e.preventDefault();
   };
 
-  const dsConfig = projectConfig || {
-    preset: PDF_CONFIG.preset,
-    theme: PDF_CONFIG.theme,
-    dir: PDF_CONFIG.dir,
-    lang: PDF_CONFIG.lang,
-    orientation: PDF_CONFIG.orientation,
-  };
+  const defaults = getProjectDefaults(currentProjectId);
+  const dsConfig = projectConfig
+    ? { ...defaults, ...projectConfig }
+    : defaults;
+
+  const visible = entered && !switching;
 
   return (
-    <div onCopy={handleCopy} onCut={handleCopy}>
-      <DSProvider config={dsConfig}>
-        <BrowserRouter>
-          <Routes>
+    <div onCopy={handleCopy} onCut={handleCopy} style={{ background: '#0a0a0a', minHeight: '100vh' }}>
+      <div
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0px) scale(1)' : 'translateY(6px) scale(0.995)',
+          transition: 'opacity 220ms ease, transform 220ms ease',
+          minHeight: '100vh'
+        }}
+      >
+        <DSProvider config={dsConfig}>
+          <BrowserRouter>
+            <Routes>
             <Route
               path="/"
               element={
@@ -678,6 +709,8 @@ export default function App() {
                   projectConfig={projectConfig}
                   projects={projects}
                   onProjectChange={handleProjectChange}
+                  activeProjectId={currentProjectId}
+                  pages={pages}
                 />
               }
             />
@@ -688,6 +721,8 @@ export default function App() {
                   projectConfig={projectConfig}
                   projects={projects}
                   onProjectChange={handleProjectChange}
+                  activeProjectId={currentProjectId}
+                  pages={pages}
                 />
               }
             />
@@ -698,6 +733,8 @@ export default function App() {
                   projectConfig={projectConfig}
                   projects={projects}
                   onProjectChange={handleProjectChange}
+                  activeProjectId={currentProjectId}
+                  pages={pages}
                 />
               }
             />
@@ -706,12 +743,14 @@ export default function App() {
               element={
                 <ExportView
                   projectConfig={projectConfig}
+                  pages={pages}
                 />
               }
             />
           </Routes>
         </BrowserRouter>
       </DSProvider>
+      </div>
     </div>
   );
 }
