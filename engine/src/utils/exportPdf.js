@@ -7,6 +7,9 @@ import { jsPDF } from 'jspdf';
 // المقاس بالبكسل يتحوّل للمليمتر (96dpi): 1px = 0.264583mm.
 const PX_TO_MM = 0.2645833333;
 
+// يترك للواجهة فرصة ترسم التحديثات (النِسبة داخل الزر) بين الصفحات
+const paint = () => new Promise((r) => setTimeout(r, 40));
+
 async function waitReady() {
   try { await document.fonts.ready; } catch {}
   await new Promise((r) => setTimeout(r, 250));
@@ -44,6 +47,7 @@ export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgres
       percent: renderPercent,
       message: `معالجة الصفحة ${current} من ${total}...`
     });
+    await paint();
 
     const node = nodes[i];
     const w = node.offsetWidth;
@@ -80,6 +84,7 @@ export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgres
   }
 
   report({ phase: 'saving', current: total, total, percent: 96, message: 'إنشاء ملف PDF...' });
+  await paint();
   pdf.save(fileName);
   report({ phase: 'done', current: total, total, percent: 100, message: 'بدأ تنزيل الملف' });
 }

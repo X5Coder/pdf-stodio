@@ -19,7 +19,7 @@ import { exportAllPagesToPdf } from './utils/exportPdf.js';
 import { loadProjects, loadProjectConfig, getStyleContent } from './utils/projectLoader.js';
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton, StatusLine, TextInput, TextArea, FieldLabel, Stepper } from './components/Dialog.jsx';
 import ZoomOverlay from './components/ZoomOverlay.jsx';
-import { ChevronRight, ChevronLeft, ZoomIn, FolderOpen, FileDown, FileText, Plus, Save, ArrowLeft, ArrowRight, FolderPlus, FileWarning, AlertTriangle, RectangleHorizontal, RectangleVertical, Loader2, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ZoomIn, FolderOpen, FileDown, FileText, Plus, Trash2, Save, ArrowLeft, ArrowRight, FolderPlus, FileWarning, AlertTriangle, RectangleHorizontal, RectangleVertical, Loader2, CheckCircle2 } from 'lucide-react';
 
 // ألوان الشل للمعاينة فقط — لا تدخل الـ PDF (التصدير يلتقط عناصر .pdf-page فقط).
 const SHELL_BG = '#0a0a0a';
@@ -27,8 +27,11 @@ const BAR_BG = '#0a0a0a';
 const BAR_BORDER = '#1a1a1a';
 const BAR_HOVER = '#1f1f1f';
 
-function TopBar({ onExport, projectConfig, onReviewStyle, onNewProject }) {
+function TopBar({ onExport, projectConfig, onReviewStyle, onNewProject, onDeleteProject, exportPercent }) {
   const [busy, setBusy] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [projectList, setProjectList] = useState([]);
+  const menuRef = useRef(null);
   const nav = useNavigate();
   const { projectId, num } = useParams();
   const activeProjectId = projectId;
@@ -39,6 +42,18 @@ function TopBar({ onExport, projectConfig, onReviewStyle, onNewProject }) {
   const go = (n) => {
     if (n >= 1 && n <= total) nav(`/project/${activeProjectId}/p/${n}`);
   };
+
+  // إغلاق قائمة المشاريع عند الضغط خارجها + تحديث القائمة عند كل فتح
+  useEffect(() => {
+    if (!showProjectMenu) return undefined;
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) setShowProjectMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    let alive = true;
+    loadProjects().then((list) => { if (alive) setProjectList(list); }).catch(() => {});
+    return () => { alive = false; document.removeEventListener('mousedown', handleClickOutside); };
+  }, [showProjectMenu]);
 
   // منع النسخ خارج المحررات، مع السماح بالتحرير/التحديد داخل حقول الإدخال
   const handleCopy = (e) => {
@@ -93,35 +108,119 @@ function TopBar({ onExport, projectConfig, onReviewStyle, onNewProject }) {
           <span className="pm-brand-text" style={{ fontSize: '11px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.1px', whiteSpace: 'nowrap' }}>PDF Studio</span>
         </div>
         <div className="pm-sep" style={{ width: 1, height: 16, background: BAR_BORDER, flexShrink: 0 }} />
-        <span
-          className="pm-title"
-          title={projectConfig?.name || ''}
-          style={{ fontSize: '12px', fontWeight: 600, color: '#f3f4f6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}
-        >
-          {projectConfig?.name || '…'}
-        </span>
-        <button
-          className="pm-new-project"
-          onClick={onNewProject}
-          title="مشروع جديد"
-          aria-label="مشروع جديد"
-          style={{
-            ...iconBtnStyle,
-            width: 30,
-            height: 30,
-            padding: 0,
-            borderRadius: 8,
-            border: `1px solid ${BAR_BORDER}`,
-            background: 'transparent',
-            color: '#ffffff',
-            transition: 'all 0.15s ease',
-            opacity: 0.95
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = BAR_HOVER; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          <Plus size={15} color="#e5e7eb" />
-        </button>
+        <div style={{ position: 'relative', minWidth: 0 }} ref={menuRef}>
+          <button
+            className="pm-project-btn"
+            onClick={() => setShowProjectMenu(v => !v)}
+            title="اختيار المشروع"
+            aria-haspopup="menu"
+            aria-expanded={showProjectMenu}
+            style={{
+              ...iconBtnStyle,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              paddingInline: 8,
+              paddingBlock: 5,
+              borderRadius: 8,
+              border: `1px solid ${showProjectMenu ? '#3B82F6' : BAR_BORDER}`,
+              background: showProjectMenu ? BAR_HOVER : '#121212',
+              color: '#ffffff',
+              transition: 'all 0.15s ease',
+              fontWeight: 500,
+              maxWidth: 220,
+              minWidth: 0
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = BAR_HOVER; e.currentTarget.style.borderColor = '#2a2a2a'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = showProjectMenu ? BAR_HOVER : '#121212'; e.currentTarget.style.borderColor = showProjectMenu ? '#3B82F6' : BAR_BORDER; }}
+          >
+            <FolderOpen size={13} color="#93C5FD" />
+            <span
+              className="pm-title"
+              style={{ fontSize: '12px', fontWeight: 600, color: '#f3f4f6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}
+            >
+              {projectConfig?.name || '…'}
+            </span>
+            <ChevronLeft
+              className="pm-project-caret"
+              size={12}
+              color="#9ca3af"
+              style={{ flexShrink: 0, transform: showProjectMenu ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.15s ease' }}
+            />
+          </button>
+          <div
+            role="menu"
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              right: 0,
+              background: '#111111',
+              border: `1px solid ${BAR_BORDER}`,
+              borderRadius: 10,
+              padding: 4,
+              minWidth: 220,
+              boxShadow: '0 12px 32px rgba(0,0,0,0.55)',
+              zIndex: 20,
+              opacity: showProjectMenu ? 1 : 0,
+              transform: showProjectMenu ? 'translateY(0) scale(1)' : 'translateY(-6px) scale(0.98)',
+              transformOrigin: 'top right',
+              transition: 'all 0.15s ease',
+              pointerEvents: showProjectMenu ? 'auto' : 'none'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '10px', color: '#6b7280', padding: '6px 8px 4px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>المشاريع</span>
+              {onNewProject && (
+                <button onClick={() => { onNewProject(); setShowProjectMenu(false); }} title="مشروع جديد" aria-label="مشروع جديد" style={{ ...iconBtnStyle, padding: 2, color: '#93C5FD' }}>
+                  <Plus size={13} color="#93C5FD" />
+                </button>
+              )}
+            </div>
+            {projectList.length === 0 && (
+              <div style={{ fontSize: '11px', color: '#6b7280', padding: '8px 10px' }}>لا توجد مشاريع بعد</div>
+            )}
+            {projectList.map((proj) => {
+              const active = proj.id === activeProjectId;
+              return (
+                <div key={proj.id} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                  <button
+                    role="menuitemradio"
+                    aria-checked={active}
+                    onClick={() => { setShowProjectMenu(false); if (!active) nav(`/project/${encodeURIComponent(proj.id)}/p/1`); }}
+                    style={{
+                      ...iconBtnStyle,
+                      display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0,
+                      justifyContent: 'flex-start', textAlign: 'right', paddingBlock: 7, paddingInline: 8,
+                      borderRadius: 7,
+                      background: active ? 'rgba(59,130,246,0.16)' : 'transparent',
+                      color: active ? '#93C5FD' : '#d1d5db',
+                      transition: 'all 0.12s ease', fontWeight: active ? 600 : 500,
+                      border: active ? '1px solid rgba(59,130,246,0.35)' : '1px solid transparent'
+                    }}
+                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#222'; } }}
+                    onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; } }}
+                  >
+                    <FolderOpen size={13} color={active ? '#93C5FD' : '#6b7280'} />
+                    <span style={{ fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{proj.name}</span>
+                  </button>
+                  {onDeleteProject && (
+                    <button
+                      title="حذف المشروع"
+                      aria-label={`حذف المشروع ${proj.name}`}
+                      onClick={(e) => { e.stopPropagation(); setShowProjectMenu(false); onDeleteProject(proj); }}
+                      style={{ ...iconBtnStyle, width: 26, height: 26, borderRadius: 6, border: '1px solid transparent', color: '#9ca3af', flexShrink: 0, transition: 'all 0.12s ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,.35)'; e.currentTarget.style.color = '#f87171'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = '#9ca3af'; }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
         <span
           className="pm-page-count"
           style={{
@@ -224,7 +323,13 @@ function TopBar({ onExport, projectConfig, onReviewStyle, onNewProject }) {
           ) : (
             <FileDown size={14} color="#FCA5A5" />
           )}
-          <span className="pm-export-label">PDF</span>
+          <span
+            className="pm-export-label"
+            style={{ minWidth: busy ? 30 : undefined, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}
+            aria-live={busy ? 'polite' : undefined}
+          >
+            {busy ? `${Math.max(0, Math.min(100, Math.round(exportPercent ?? 0)))}%` : 'PDF'}
+          </span>
         </button>
       </div>
     </header>
@@ -377,9 +482,11 @@ function SinglePageView() {
             onClick={(e) => { e.stopPropagation(); buzz(); prev(); }}
             aria-label="الصفحة السابقة"
             title="الصفحة السابقة"
-            style={{ position: 'absolute', top: '50%', right: isMobile ? 6 : 12, transform: 'translateY(-50%)', zIndex: 6, width: 42, height: 42, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(20,20,22,0.6)', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85 }}
+            style={{ position: 'absolute', top: '50%', right: isMobile ? 6 : 12, transform: 'translateY(-50%)', zIndex: 6, width: 42, height: 42, borderRadius: '50%', border: 'none', background: 'transparent', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.75, transition: 'background 0.15s ease, opacity 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.75'; }}
           >
-            <ChevronRight size={19} strokeWidth={1.8} />
+            <ChevronRight size={22} strokeWidth={1.6} />
           </button>
         )}
         {current < total && (
@@ -387,9 +494,11 @@ function SinglePageView() {
             onClick={(e) => { e.stopPropagation(); buzz(); next(); }}
             aria-label="الصفحة التالية"
             title="الصفحة التالية"
-            style={{ position: 'absolute', top: '50%', left: isMobile ? 6 : 12, transform: 'translateY(-50%)', zIndex: 6, width: 42, height: 42, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(20,20,22,0.6)', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85 }}
+            style={{ position: 'absolute', top: '50%', left: isMobile ? 6 : 12, transform: 'translateY(-50%)', zIndex: 6, width: 42, height: 42, borderRadius: '50%', border: 'none', background: 'transparent', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.75, transition: 'background 0.15s ease, opacity 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.opacity = '0.75'; }}
           >
-            <ChevronLeft size={19} strokeWidth={1.8} />
+            <ChevronLeft size={22} strokeWidth={1.6} />
           </button>
         )}
         <div
@@ -511,35 +620,13 @@ function ExportView() {
 }
 
 // مشروع غير موجود لديه رابط — شاشة واضحة مع زر العودة للمشاريع
-function ProjectNotFound({ projectId, onNewProject }) {
-  return (
-    <div dir="rtl" style={{ minHeight: '100dvh', background: SHELL_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ textAlign: 'center', maxWidth: 400 }}>
-        <div aria-hidden="true" style={{ width: 64, height: 64, margin: '0 auto', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
-          <FileWarning size={28} color="#fcd34d" strokeWidth={1.6} />
-        </div>
-        <h1 style={{ fontSize: 19, fontWeight: 800, color: '#f4f4f5', margin: '16px 0 8px' }}>المشروع غير موجود</h1>
-        <p style={{ fontSize: 12.5, color: '#a1a1aa', lineHeight: 1.8, margin: 0 }}>
-          لا يوجد مجلد للمشروع <code dir="ltr" style={{ color: '#93c5fd' }}>projects/{projectId}/</code> — ربما حُذف من القرص.
-        </p>
-        <button
-          onClick={onNewProject}
-          style={{ marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, paddingInline: 18, borderRadius: 9, border: '1px solid #3b82f6', background: '#2563eb', color: '#fff', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
-        >
-          <Plus size={15} />
-          إنشاء مشروع جديد
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // الإطار العام لكل مسارات /project/:projectId — يحمّل الإعدادات ويوفّر TopBar والسياق
-function ProjectLayout({ onReviewStyle, onNewProject }) {
+function ProjectLayout({ onReviewStyle, onNewProject, onDeleteProject }) {
   const { projectId } = useParams();
   const location = useLocation();
   const [projectConfig, setProjectConfig] = useState(undefined); // undefined = جارٍ التحميل، null = غير موجود
   const [exporting, setExporting] = useState(false);
+  const [exportPercent, setExportPercent] = useState(null);
   const exportHostRef = useRef(null);
 
   // تذكّر آخر مشروع مفتوح — للدخول التلقائي من /
@@ -587,21 +674,27 @@ function ProjectLayout({ onReviewStyle, onNewProject }) {
   const handleExport = async () => {
     if (exporting) return;
     setExporting(true);
+    setExportPercent(2);
     try {
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       await new Promise((r) => setTimeout(r, 180));
       await exportAllPagesToPdf({
         fileName: `${projectConfig?.name || 'document'}.pdf`,
         root: exportHostRef.current || undefined,
+        onProgress: (p) => { if (p && typeof p.percent === 'number') setExportPercent(Math.round(p.percent)); },
       });
       await new Promise((r) => setTimeout(r, 120));
+    } catch (e) {
+      console.error('فشل التصدير:', e);
     } finally {
       setExporting(false);
+      setExportPercent(null);
     }
   };
 
   if (projectConfig === null) {
-    return <ProjectNotFound projectId={projectId} onNewProject={onNewProject} />;
+    // لا توجد صفحة "غير موجود" — ارجع للجذر، وهو يحسم المشروع الصحيح أو الشاشة الفارغة
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -613,6 +706,8 @@ function ProjectLayout({ onReviewStyle, onNewProject }) {
             projectConfig={projectConfig}
             onReviewStyle={onReviewStyle}
             onNewProject={onNewProject}
+            onDeleteProject={onDeleteProject}
+            exportPercent={exportPercent}
           />
         )}
         <Outlet context={{ projectId, projectConfig, pages }} />
@@ -709,6 +804,7 @@ export default function App() {
   const [entered, setEntered] = useState(false);
   const [styleModal, setStyleModal] = useState({ open: false, phase: 'closed', projectId: null, content: '', draft: '', missing: false, mode: 'review', saving: false, status: '' });
   const [newProjectModal, setNewProjectModal] = useState({ open: false, phase: 'closed', step: 1, id: '', name: '', style: '', orientation: 'landscape', saving: false, status: '' });
+  const [deleteModal, setDeleteModal] = useState({ open: false, phase: 'closed', project: null, saving: false, status: '' });
 
   const defaultStyleTemplate = (pid) => `# Style — ${pid}\n\n> مصدر الستايل المعتمد. يُطبَّق على كل الصفحات. (إلزامي)\n\n## الهوية والإعدادات\n- **الاسم:** ${pid}\n- **اللغة/الاتجاه:** العربية، RTL (dir=\"rtl\", lang=\"ar\")\n- **مقاس/اتجاه الصفحة:** A4 عمودي (portrait) أو عرضي (landscape)\n- **الثيم/الألوان:** \n\n## الخطوط\n- عام: fonts/\n- خاص بالمشروع: font/\n\n## تخطيط ومكوّنات الصفحة\n- \n\n## قواعد التصدير\n- PDF صالح.\n`;
   const openStyleReview = useCallback(async (projectId, mode = 'review') => {
@@ -743,6 +839,21 @@ export default function App() {
   };
   const closeStyleModal = () => { setStyleModal(m => ({...m, phase:'exit'})); setTimeout(() => setStyleModal(m => m.phase==='exit'?{...m, open:false, phase:'closed'}:m), 220); };
   const closeNewProject = () => { setNewProjectModal(m => ({...m, phase:'exit'})); setTimeout(() => setNewProjectModal(m => m.phase==='exit'?{...m, open:false, phase:'closed'}:m), 220); };
+  const closeDeleteModal = () => { setDeleteModal(m => ({...m, phase:'exit'})); setTimeout(() => setDeleteModal(m => m.phase==='exit'?{...m, open:false, phase:'closed', project:null}:m), 220); };
+  const openDeleteProject = useCallback((proj) => { setDeleteModal({ open:true, phase:'enter', project: proj, saving:false, status:'' }); requestAnimationFrame(()=>requestAnimationFrame(()=>setDeleteModal(m=>m.open?{...m,phase:'entered'}:m))); }, []);
+  const confirmDeleteProject = async () => {
+    const proj = deleteModal.project; if (!proj) return;
+    setDeleteModal(m=>({...m,saving:true,status:''}));
+    try {
+      const r = await fetch(`/__pdfstudio/project?project=${encodeURIComponent(proj.id)}`, { method:'DELETE' });
+      const d = await r.json().catch(()=>({}));
+      if (r.ok && d.ok) {
+        setDeleteModal(m=>({...m,saving:false,status:'تم الحذف ✓'}));
+        try { localStorage.removeItem('pdfstudio:lastProject'); } catch {}
+        setTimeout(() => { waitForServer().then(() => { window.location.href='/'; }); }, d.restarting ? 700 : 250);
+      } else setDeleteModal(m=>({...m,saving:false,status:d.error?`تعذر الحذف: ${d.error}`:'تعذر الحذف'}));
+    } catch(e){ setDeleteModal(m=>({...m,saving:false,status:'تعذر الحذف (تأكد أن المحرك شغال محليًا)'})); }
+  };
   const slugifyId = (v) => { const x = String(v||'').trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9_\-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,''); return x || ('project-' + Date.now().toString(36)); };
   const openNewProject = () => {
     setNewProjectModal({ open: true, phase: 'enter', step: 1, id: '', name: '', style: '', orientation: 'landscape', saving: false, status: '' });
@@ -828,6 +939,7 @@ export default function App() {
                 <ProjectLayout
                   onReviewStyle={openStyleReview}
                   onNewProject={openNewProject}
+                  onDeleteProject={openDeleteProject}
                 />
               }
             >
@@ -953,6 +1065,44 @@ export default function App() {
                 </DialogButton>
               </div>
             )}
+          </DialogFooter>
+        </Dialog>
+      )}
+
+      {deleteModal.open && (
+        <Dialog phase={deleteModal.phase} onClose={closeDeleteModal} width={480} labelledBy="dlg-del-title">
+          <DialogHeader
+            tone="red"
+            icon={Trash2}
+            title="حذف المشروع"
+            subtitle="لا يمكن التراجع عن هذا الإجراء"
+            onClose={closeDeleteModal}
+            labelledBy="dlg-del-title"
+          />
+          <DialogBody>
+            <div role="alert" style={{ display:'flex', gap:10, alignItems:'flex-start', background:'rgba(239,68,68,0.09)', border:'1px solid rgba(239,68,68,0.35)', padding:'11px 12px', borderRadius:10, marginBottom:12 }}>
+              <AlertTriangle size={16} color="#fca5a5" style={{ flexShrink:0, marginTop:2 }} />
+              <div style={{ fontSize:12, lineHeight:1.8, color:'#fecaca' }}>سيُحذف مجلد المشروع و<b>كل صفحاته وملفاته نهائيًا</b> من القرص.</div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, background:'#0e0e11', border:'1px solid #23232b', borderRadius:10, padding:'10px 12px' }}>
+              <span style={{ width:36, height:36, flexShrink:0, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.35)' }}>
+                <FolderOpen size={17} color="#fca5a5" />
+              </span>
+              <div style={{ minWidth:0 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:'#f4f4f5', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deleteModal.project?.name || deleteModal.project?.id}</div>
+                <code dir="ltr" style={{ fontSize:10.5, color:'#71717a' }}>projects/{deleteModal.project?.id}/</code>
+              </div>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <div style={{ flex:'1 1 auto', minWidth:0 }}><StatusLine status={deleteModal.status} /></div>
+            <div style={{ display:'flex', gap:8 }}>
+              <DialogButton tone="ghost" onClick={closeDeleteModal} disabled={deleteModal.saving}>إلغاء</DialogButton>
+              <DialogButton tone="danger" onClick={confirmDeleteProject} disabled={deleteModal.saving}>
+                {deleteModal.saving ? <Loader2 size={14} style={{ animation:'spin 0.8s linear infinite' }} /> : <Trash2 size={14} />}
+                {deleteModal.saving ? 'جارٍ الحذف...' : 'حذف المشروع'}
+              </DialogButton>
+            </div>
           </DialogFooter>
         </Dialog>
       )}
