@@ -1,4 +1,4 @@
-// Project Loader - اكتشاف المشاريع/الإعدادات (متوافق مع الخريطة الجديدة: style.md إلزامي)
+// Project Loader — اكتشاف المشاريع/الإعدادات من القرص (عبر المحرك) مع glob كاحتياط
 
 const projectJsonModules = import.meta.glob('../../../projects/*/project.json', { eager: true });
 const styleModules = import.meta.glob('../../../projects/*/style.md', { eager: true, query: '?raw', import: 'default' });
@@ -8,7 +8,7 @@ function pidFromPath(path) {
   return m ? m[1] : null;
 }
 
-export function hasStyle(projectId) {
+function hasStyle(projectId) {
   return Object.keys(styleModules).some((p) => pidFromPath(p) === projectId);
 }
 
@@ -19,7 +19,7 @@ export function getStyleContent(projectId) {
   return null;
 }
 
-export async function loadProjects() {
+function globProjects() {
   const map = new Map();
   for (const [p, mod] of Object.entries(projectJsonModules)) {
     const id = pidFromPath(p);
@@ -40,22 +40,48 @@ export async function loadProjects() {
     if (!id || map.has(id)) continue;
     map.set(id, { id, name: id, description: '', path: id, hasStyle: true, config: {} });
   }
-  // merge any locally saved projects
-  const savedProjects = localStorage.getItem('pdf-studio-projects');
-  if (savedProjects) {
-    try {
-      const parsed = JSON.parse(savedProjects);
-      for (const sp of parsed) {
-        if (sp?.id && !map.has(sp.id)) map.set(sp.id, { ...sp, hasStyle: hasStyle(sp.id) });
-      }
-    } catch (e) {
-      console.error('Failed to load saved projects:', e);
-    }
+  return map;
+}
+
+// قائمة المشاريع من المحرك مباشرة (يقرأ مجلد projects/ من القرص) —
+// هذا المصدر الموثوق: يشمل أي مشروع تم إنشاؤه/حذفه للتو دون الاعتماد على إعادة تشغيل المحرك.
+async function fetchRuntimeProjects() {
+  try {
+    const r = await fetch('/__pdfstudio/projects', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json().catch(() => null);
+    if (!d?.ok || !Array.isArray(d.projects)) return null;
+    return d.projects
+      .filter((p) => p && typeof p.id === 'string' && p.id)
+      .map((p) => ({
+        id: p.id,
+        name: p.name || p.id,
+        description: p.description || '',
+        path: p.id,
+        hasStyle: !!p.hasStyle,
+        config: p.config || {},
+      }));
+  } catch {
+    return null;
   }
-  return Array.from(map.values());
+}
+
+export async function loadProjects() {
+  const map = new Map();
+  // 1) المصدر الأساسي: قائمة المحرك (قرص)
+  const runtime = await fetchRuntimeProjects();
+  if (runtime) {
+    for (const p of runtime) map.set(p.id, p);
+  }
+  // 2) مصدر احتياط (وقت التحويل) — يملأ الفجوات فقط
+  for (const [id, p] of globProjects()) {
+    if (!map.has(id)) map.set(id, p);
+  }
+  return Array.from(map.values()).sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export async function loadProjectConfig(projectId) {
+  if (!projectId) return null;
   for (const [p, mod] of Object.entries(projectJsonModules)) {
     if (pidFromPath(p) === projectId) return mod?.default || mod || null;
   }
@@ -64,17 +90,4 @@ export async function loadProjectConfig(projectId) {
     if (r.ok) { const d = await r.json(); if (d?.ok && d.config) return d.config; }
   } catch {}
   return null;
-}
-
-export async function loadPage(_projectId, _pageNumber) {
-  // new map uses build-time glob registration in src/pages/index.js
-  return null;
-}
-
-export async function loadAllPages(_projectId) {
-  return [];
-}
-
-export function saveProjects(projects) {
-  localStorage.setItem('pdf-studio-projects', JSON.stringify(projects));
 }

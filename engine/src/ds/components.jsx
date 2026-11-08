@@ -1,10 +1,9 @@
 import React from 'react';
-import { PDF_CONFIG } from '../config.js';
 import { useDS } from './useDS.js';
 
 // حاوية الصفحة بمقاس الـ PDF الحقيقي بالضبط (قواعد p1/p2/p3/e4).
 export function Page({ tone = 'paper', footer = false, pageNo, total, children, id, bleed = false, padding }) {
-  const { dims, c, fs, sp, font, lhBody } = useDS();
+  const { dims, c, fs, sp, font, lhBody, dir, title } = useDS();
   const isBrand = tone === 'brand';
   const bg = isBrand ? c.brand : c.bg;
   const fg = isBrand ? '#FFFFFF' : c.text;
@@ -18,7 +17,7 @@ export function Page({ tone = 'paper', footer = false, pageNo, total, children, 
       id={id}
       data-page={pageNo}
       className="pdf-page ds-nobreak"
-      dir={PDF_CONFIG.dir}
+      dir={dir || 'rtl'}
       style={{
         width: dims.w,
         height: dims.h,
@@ -58,7 +57,7 @@ export function Page({ tone = 'paper', footer = false, pageNo, total, children, 
             opacity: 0.85
           }}
         >
-          <span>{PDF_CONFIG.title}</span>
+          <span>{title}</span>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>
             <bdi>
               {pageNo} / {total}

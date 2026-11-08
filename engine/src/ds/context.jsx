@@ -49,6 +49,8 @@ export function buildDS(config = {}) {
     theme: merged.theme || DEFAULT_DS_CONFIG.theme,
     dir: merged.dir || DEFAULT_DS_CONFIG.dir,
     lang: merged.lang || DEFAULT_DS_CONFIG.lang,
+    // عنوان التذييل: اسم المشروع من project.json إن وُجد
+    title: merged.title || merged.name || 'PDF Studio',
     dims: preset,
     c,
     fs,
@@ -68,6 +70,8 @@ export function DSProvider({ config, children }) {
     config?.theme,
     config?.dir,
     config?.lang,
+    config?.title,
+    config?.name,
   ]);
   return <DSContext.Provider value={value}>{children}</DSContext.Provider>;
 }

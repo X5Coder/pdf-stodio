@@ -48,13 +48,8 @@ python tools/fontSearch.py "Cairo" "assets/fonts" ar
 
 ---
 
-### 3. migrate-default-project.ps1
-سكريبت PowerShell لنقل الصفحات الحالية إلى الهيكل الجديد.
-
-**الاستخدام:**
-```powershell
-.\tools\migrate-default-project.ps1
-```
+### 3. لا يوجد مشروع افتراضي
+التطبيق لا يفترض أي مشروع — عند فتحه تظهر شاشة اختيار المشروع دائمًا وتختار منها ما تريد الدخول إليه أو إنشاء مشروع جديد.
 
 ---
 
@@ -62,20 +57,20 @@ python tools/fontSearch.py "Cairo" "assets/fonts" ar
 
 ```
 projects/
-├── default/                    # المشروع الافتراضي (مثال)
+├── my-project/                # مشروع جديد
+│   ├── style.md               # إلزامي: مرجع الستايل
 │   ├── project.json           # معلومات المشروع
-│   ├── page01/
+│   ├── font/                  # خطوط خاصة بالمشروع (اختياري)
+│   ├── page-1/
 │   │   ├── page.jsx           # كود الصفحة
 │   │   └── images/            # صور خاصة بالصفحة
-│   ├── page02/
+│   ├── page-2/
 │   │   ├── page.jsx
 │   │   └── images/
 │   └── ...
-├── my-project/                # مشروع جديد
+├── another-project/
+│   ├── style.md
 │   ├── project.json
-│   ├── page01/
-│   │   ├── page.jsx
-│   │   └── images/
 │   └── ...
 
 assets/                        # الموارد المشتركة

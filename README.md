@@ -8,7 +8,7 @@
 
 ## الخريطة (مختصر)
 - الجذر: `SKILL.md`, `engine/`, `projects/`, `fonts/`, `tools/` (+ `tests/`, docs)
-- `engine/`: المعاينة/Preview (Top bar: مشاريع + تنزيل/تحويل PDF + Next/Prev) + كود Vite/React (`src/`, `public/`, `index.html`)
+- `engine/`: المعاينة/Preview (شاشة اختيار المشروع دائمًا عند الفتح ← داخل أي مشروع: Top bar مع تنزيل/تحويل PDF + Next/Prev) + كود Vite/React (`src/`, `public/`, `index.html`)
 - `projects/<name>/`: `style.md` (إلزامي), `project.json`, `font/` (اختياري), `page-N/page.jsx` + `images/`
 - `tools/`: image-search / font-search
 

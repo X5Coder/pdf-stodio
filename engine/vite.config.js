@@ -49,6 +49,40 @@ function pdfStudioStyleApi() {
         }
         res.statusCode = 405; res.end('Method Not Allowed');
       });
+      server.middlewares.use('/__pdfstudio/ping', async (req, res) => {
+        return json(res,200,{ ok:true });
+      });
+      server.middlewares.use('/__pdfstudio/projects', async (req, res) => {
+        if (req.method !== 'GET') { res.statusCode=405; return res.end('Method Not Allowed'); }
+        try {
+          const entries = [];
+          if (fs.existsSync(projectsDir)) {
+            for (const name of fs.readdirSync(projectsDir)) {
+              if (!safeId(name)) continue;
+              const projectRoot = path.join(projectsDir, name);
+              let st = null;
+              try { st = fs.statSync(projectRoot); } catch { st = null; }
+              if (!st || !st.isDirectory()) continue;
+              let config = null;
+              const configPath = path.join(projectRoot, 'project.json');
+              if (fs.existsSync(configPath)) {
+                try { config = JSON.parse(fs.readFileSync(configPath,'utf-8')); } catch { config = null; }
+              }
+              const hasStyle = fs.existsSync(path.join(projectRoot, 'style.md'));
+              if (!config && !hasStyle) continue;
+              entries.push({
+                id: name,
+                name: (config && typeof config.name === 'string' && config.name.trim()) ? config.name : name,
+                description: (config && typeof config.description === 'string') ? config.description : '',
+                hasStyle,
+                config: config || {},
+              });
+            }
+          }
+          entries.sort((a,b) => a.id.localeCompare(b.id));
+          return json(res,200,{ ok:true, projects: entries });
+        } catch (e) { return json(res,500,{ok:false,error:String(e)}); }
+      });
       server.middlewares.use('/__pdfstudio/project', async (req, res) => {
         const url = new URL(req.url || '/', 'http://localhost');
         if (req.method === 'DELETE') {

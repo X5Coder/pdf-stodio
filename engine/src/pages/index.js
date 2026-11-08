@@ -1,7 +1,4 @@
-﻿// تسجيل صفحات المشاريع (يدعم خريطة page-N/page.jsx ديناميكيًا عبر Vite glob)
-import { getCurrentProject } from '../config.js';
-
-// new map: projects/<id>/page-N/page.jsx (وأيضًا content.jsx كبديل)
+﻿// تسجيل صفحات المشاريع (projects/<id>/page-N/page.jsx — وأيضًا content.jsx كبديل)
 const modules = {
   ...import.meta.glob('../../../projects/*/page-*/page.jsx', { eager: true }),
   ...import.meta.glob('../../../projects/*/page-*/content.jsx', { eager: true }),
@@ -32,11 +29,10 @@ function buildProjectPages() {
   return result;
 }
 
-export const PROJECT_PAGES = buildProjectPages();
+const PROJECT_PAGES = buildProjectPages();
 
 export function getPages(projectId) {
-  return PROJECT_PAGES[projectId] || PROJECT_PAGES.default || [];
+  // لا يُرجع صفحات مشروع آخر بصمت — إرجاع فاضي يعرض حالة "لا توجد صفحات" بشكل صحيح
+  if (!projectId) return [];
+  return PROJECT_PAGES[projectId] || [];
 }
-
-// للتوافق مع الكود القديم
-export const PAGES = getPages(getCurrentProject());

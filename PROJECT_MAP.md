@@ -11,7 +11,7 @@ pdf-studio/
 │
 ├── engine/                   ← المعاينة / الـ Preview + تطبيق Vite/React
 │   ├── src/                  ← كود المحرك/الواجهة
-│   │   ├── App.jsx           ← Top bar: قائمة المشاريع (Projects) + تنزيل/تحويل PDF + تقديم/تأخير (Next/Prev)
+│   │   ├── App.jsx           ← Preview: شاشة اختيار المشروع دائمًا + Top bar داخل المشروع (قائمة المشاريع + تنزيل/تحويل PDF + Next/Prev)
 │   │   ├── pages/index.js    ← اكتشاف صفحات المشاريع تلقائيًا (projects/*/page-N/page.jsx|content.jsx)
 │   │   ├── utils/            ← projectLoader.js, exportPdf.js
 │   │   └── ds/               ← مكوّنات/نظام تصميم مساعد

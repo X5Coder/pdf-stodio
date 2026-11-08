@@ -1,21 +1,21 @@
-import { PDF_CONFIG } from '../config.js';
+import { BASE_CONFIG } from '../config.js';
 import { PRESETS, THEMES, SERIES, FONT_FAMILY, MAX_MEASURE, getFS, getSP } from './tokens.js';
 import { useDSContext } from './context.jsx';
 
 // Hook للوصول لإعدادات/مقاسات التصميم.
-// يفضّل مصدره من DSProvider (إعدادات المشروع)، مع fallback إلى PDF_CONFIG للتوافق.
+// المصدر الأساسي هو DSProvider (إعدادات المشروع)، مع fallback أساسي عند الاستخدام خارج السياق.
 export function useDS() {
   const ctx = useDSContext();
   if (ctx) return ctx;
 
-  const preset = PRESETS[PDF_CONFIG.preset] ?? PRESETS.a4;
-  const c = THEMES[PDF_CONFIG.theme] ?? THEMES.calm;
-  const fs = getFS(PDF_CONFIG.preset);
-  const sp = getSP(PDF_CONFIG.preset);
+  const preset = PRESETS[BASE_CONFIG.preset] ?? PRESETS.slide;
+  const c = THEMES[BASE_CONFIG.theme] ?? THEMES.forest;
+  const fs = getFS(BASE_CONFIG.preset);
+  const sp = getSP(BASE_CONFIG.preset);
   return {
-    preset: PDF_CONFIG.preset,
-    theme: PDF_CONFIG.theme,
-    dir: PDF_CONFIG.dir,
+    preset: BASE_CONFIG.preset,
+    theme: BASE_CONFIG.theme,
+    dir: BASE_CONFIG.dir,
     dims: preset,
     c,
     fs,
@@ -24,6 +24,7 @@ export function useDS() {
     font: FONT_FAMILY,
     measure: MAX_MEASURE,
     lhBody: preset.lhBody,
-    lhHeading: preset.lhHeading
+    lhHeading: preset.lhHeading,
+    title: 'PDF Studio',
   };
 }
