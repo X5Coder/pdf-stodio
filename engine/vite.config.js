@@ -83,6 +83,40 @@ function pdfStudioStyleApi() {
           return json(res,200,{ ok:true, projects: entries });
         } catch (e) { return json(res,500,{ok:false,error:String(e)}); }
       });
+      server.middlewares.use('/__pdfstudio/pages', async (req, res) => {
+        if (req.method !== 'GET') { res.statusCode=405; return res.end('Method Not Allowed'); }
+        const url = new URL(req.url || '/', 'http://localhost');
+        const projectId = url.searchParams.get('project') || '';
+        if (!safeId(projectId)) return json(res,400,{ ok:false, error:'invalid project id' });
+        const projectRoot = path.join(projectsDir, projectId);
+        if (!projectRoot.startsWith(projectsDir)) return json(res,400,{ok:false,error:'bad path'});
+        try {
+          const pages = [];
+          const urls = {};
+          if (fs.existsSync(projectRoot)) {
+            for (const name of fs.readdirSync(projectRoot)) {
+              const m = /^page-(\d+)$/.exec(name);
+              if (!m) continue;
+              const dir = path.join(projectRoot, name);
+              try { if (!fs.statSync(dir).isDirectory()) continue; } catch { continue; }
+              for (const file of ['page.jsx', 'content.jsx']) {
+                const fp = path.join(dir, file);
+                if (fs.existsSync(fp)) {
+                  const n = parseInt(m[1], 10);
+                  if (!pages.includes(n)) {
+                    pages.push(n);
+                    const norm = fp.replace(/\\/g, '/');
+                    urls[n] = norm.startsWith('/') ? '/@fs' + norm : '/@fs/' + norm;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          pages.sort((a,b) => a - b);
+          return json(res,200,{ ok:true, pages, urls });
+        } catch (e) { return json(res,500,{ok:false,error:String(e)}); }
+      });
       server.middlewares.use('/__pdfstudio/project', async (req, res) => {
         const url = new URL(req.url || '/', 'http://localhost');
         if (req.method === 'DELETE') {

@@ -12,7 +12,7 @@ import {
   useOutletContext,
   useSearchParams
 } from 'react-router-dom';
-import { getPages } from './pages/index.js';
+import { getPages, refreshProjectPages } from './pages/index.js';
 import { BASE_CONFIG } from './config.js';
 import { useDS, DSProvider } from './ds/index.js';
 import { exportAllPagesToPdf } from './utils/exportPdf.js';
@@ -34,7 +34,8 @@ function TopBar({ onExport, projectConfig, projects, onReviewStyle, onNewProject
   const nav = useNavigate();
   const { projectId, num } = useParams();
   const activeProjectId = projectId;
-  const total = useMemo(() => getPages(activeProjectId).length, [activeProjectId]);
+  const pages = useProjectPages(activeProjectId);
+  const total = pages.length;
   const current = total > 0 ? Math.max(1, Math.min(total, parseInt(num ?? '1', 10) || 1)) : 0;
 
   const go = (n) => {
@@ -380,6 +381,24 @@ async function waitForServer(tries = 50, delay = 400) {
   return false;
 }
 
+// صفحات المشروع مع اكتشاف ديناميكي: أي صفحة تُضاف أو تُحذف على القرص تظهر بلا إعادة تشغيل
+function useProjectPages(projectId) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!projectId) return;
+    let alive = true;
+    const check = () => {
+      refreshProjectPages(projectId).then((changed) => {
+        if (alive && changed) setTick((t) => t + 1);
+      });
+    };
+    check();
+    const t = setInterval(check, 2500); // مراقبة القرص دوريًا عشان الصفحات الجديدة تظهر لحظيًا
+    return () => { alive = false; clearInterval(t); };
+  }, [projectId]);
+  return useMemo(() => getPages(projectId), [projectId, tick]);
+}
+
 const iconBtnStyle = {
   background: 'transparent',
   color: '#fff',
@@ -634,7 +653,7 @@ function ProjectLayout({ projects, onReviewStyle, onNewProject, onDeleteProject 
     document.documentElement.dir = 'rtl';
   }, []);
 
-  const pages = useMemo(() => getPages(projectId), [projectId]);
+  const pages = useProjectPages(projectId);
   const dsConfig = projectConfig ? { ...BASE_CONFIG, ...projectConfig } : BASE_CONFIG;
   const isExportRoute = /\/export\/?$/.test(location.pathname);
 

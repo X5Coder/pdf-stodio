@@ -47,3 +47,6 @@ desktop.ini
 *.bak
 nul
 NUL
+
+# User projects — محتوى خاص بالمستخدم، لا يُنشر على GitHub أبدًا
+projects/
