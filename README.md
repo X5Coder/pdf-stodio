@@ -21,7 +21,8 @@
 **3️⃣ Paste the repository link to the agent, then send this fixed prompt:**
 
 ```text
-Read AGENTS.md
+Download this project to my local machine, then read the `AGENT.md` file.
+https://github.com/X5Coder/pdf-stodio
 ```
 
 That's it. 🎉
