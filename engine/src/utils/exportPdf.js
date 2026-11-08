@@ -8,17 +8,16 @@ import { jsPDF } from 'jspdf';
 const PX_TO_MM = 0.2645833333;
 
 async function waitReady() {
-  await document.fonts.ready;
-  try {
-    await Promise.all([
-      document.fonts.load("400 22px 'IBM Plex Sans Arabic'"),
-      document.fonts.load("600 22px 'IBM Plex Sans Arabic'"),
-      document.fonts.load("700 22px 'IBM Plex Sans Arabic'")
-    ]);
-  } catch {
-    // يكفي fonts.ready كاحتياط
-  }
-  await new Promise((r) => setTimeout(r, 400));
+  try { await document.fonts.ready; } catch {}
+  await new Promise((r) => setTimeout(r, 250));
+}
+
+// مهلة قصوى لكل صفحة — تحول أي توقف غير متوقع لخطأ يعيده الـ export بدل تجميد الموقع
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout: ${label}`)), ms)),
+  ]);
 }
 
 export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgress, root } = {}) {
@@ -51,14 +50,17 @@ export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgres
     const h = node.offsetHeight;
     // خلفية الصفحة نفسها (تحفظ صفحات brand الداكنة كما هي)
     const bg = getComputedStyle(node).backgroundColor;
-    const dataUrl = await toPng(node, {
-      pixelRatio,
-      cacheBust: true,
-      backgroundColor: bg,
-      width: w,
-      height: h,
-      style: { transform: 'none', margin: '0' }
-    });
+    const dataUrl = await withTimeout(
+      toPng(node, {
+        pixelRatio,
+        backgroundColor: bg,
+        width: w,
+        height: h,
+        style: { transform: 'none', margin: '0' }
+      }),
+      60000,
+      `rendering page ${current}`
+    );
     const orientation = h >= w ? 'portrait' : 'landscape';
     const format = [w * PX_TO_MM, h * PX_TO_MM];
     if (!pdf) {
@@ -84,7 +86,7 @@ export async function exportAllPagesToPdf({ fileName = 'document.pdf', onProgres
 
 export async function exportSinglePageToPng(node, fileName = 'page.png') {
   await waitReady();
-  const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true });
+  const dataUrl = await toPng(node, { pixelRatio: 2 });
   const a = document.createElement('a');
   a.href = dataUrl;
   a.download = fileName;
