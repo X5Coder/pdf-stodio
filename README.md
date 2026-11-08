@@ -1,21 +1,25 @@
-# PDF Studio (محرر/منظّم مشاريع PDF)
+# PDF Studio
 
-نظام يعمل كـ **محرر مشاريع PDF**: تختار/تحمّل مشروعًا، تعطيه لأي AI Agent مع **التصميم/السكيلز** الخاصة بالمشروع، والـ Agent يبني أو يكمل الصفحات داخل نفس المشروع. النتيجة قابلة للمعاينة والتصدير كـ PDF.
+محرر/منظّم لمشاريع PDF يعمل مع أي AI Agent. كل مشروع مستقل وله ستايل خاص (`style.md` **إلزامي**)، والهدف صفحات قابلة للمعاينة والتصدير كـ PDF صالح.
 
-## المبادئ
-- **فصل كامل بين المشاريع**: كل مشروع له `fonts/` و`skills/` و`pages/` و`project.json`.
-- **لا يوجد ديزاين عالمي مفروض**: التصميم يجي من `projects/<project-id>/skills/` أو من تعليمات المستخدم للمشروع.
+## ابدأ هنا
+- **`SKILL.md`** — السكيل الأساسية والوحيدة (اقرأها أولًا): تقرأ الكل، تعرض المشاريع، تطلب اختيار المستخدم، وتفرض مراجعة/إنشاء `style.md`.
+- **`PROJECT_MAP.md`** — الخريطة المعتمدة.
 
-## لأي AI Agent
-1. اقرأ `projects/PROJECT_SYSTEM_BASE.md`
-2. اقرأ `AGENTS.md` و`PROJECT_MAP.md`
-3. عند العمل على مشروع محدد: اقرأ **كل ملفات `.md`** في `projects/<project-id>/skills/`
+## الخريطة (مختصر)
+- الجذر: `SKILL.md`, `engine/`, `projects/`, `fonts/`, `tools/` (+ `tests/`, docs)
+- `engine/`: المعاينة/Preview (Top bar: مشاريع + تنزيل/تحويل PDF + Next/Prev) + كود Vite/React (`src/`, `public/`, `index.html`)
+- `projects/<name>/`: `style.md` (إلزامي), `project.json`, `font/` (اختياري), `page-N/page.jsx` + `images/`
+- `tools/`: image-search / font-search
 
 ## التشغيل
 ```bash
-cd pdf-stodio
+cd engine
 npm install
 npm run dev
 ```
+أو من الجذر: `start-dev.bat` (يشغّل `engine/start-dev.bat`).
 
-راجع `PROJECT_MAP.md` للبنية الكاملة.
+## ملاحظات واجهة
+- زر الستايل: مراجعة/عرض `style.md` (نافذة بأنيميشن فتح/إغلاق وبدون سكرول ظاهر) — **لا تفتح تلقائيًا عند تبديل المشروع**.
+- اكتشاف الصفحات تلقائي من `projects/*/page-N/page.jsx` (أو `content.jsx`).

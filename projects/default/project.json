@@ -1,11 +1,10 @@
 {
-  "name": "دليل عملي لإعداد دراسة جدوى متكاملة",
-  "totalPages": 40,
-  "theme": "forest",
+  "name": "Default",
+  "description": "Auto-created default project. Edit style.md and page-1 to get started.",
   "preset": "slide",
   "orientation": "landscape",
   "dir": "rtl",
   "lang": "ar",
-  "createdAt": "2026-10-31",
-  "description": "مشروع افتراضي - مثال توضيحي"
+  "theme": "forest",
+  "totalPages": 1
 }

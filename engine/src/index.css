@@ -1,0 +1,147 @@
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', Tahoma, sans-serif;
+  background: #0a0a0a;
+  -webkit-font-smoothing: antialiased;
+  /* منع تحديد ونسخ */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* منع تحديد ونسخ في كل العناصر */
+* {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* السماح بالتحديد والتحرير داخل حقول الإدخال/المحررات (مثل محرر style.md) */
+input, textarea, [contenteditable="true"] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* منع النسخ والقص واللصق */
+::selection {
+  background: transparent;
+}
+::-moz-selection {
+  background: transparent;
+}
+input::selection, textarea::selection, [contenteditable="true"]::selection {
+  background: rgba(59,130,246,0.35);
+  color: #fff;
+}
+input::-moz-selection, textarea::-moz-selection, [contenteditable="true"]::-moz-selection {
+  background: rgba(59,130,246,0.35);
+  color: #fff;
+}
+
+/* واجهة المعاينة (الشل فقط — صفحات الـ PDF تبقى بمقاسها الثابت) */
+.pm-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  row-gap: 0;
+}
+.pm-topbar .pm-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.pm-topbar .pm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+button { touch-action: manipulation; }
+button:focus-visible {
+  outline: 2px solid #E69F00;
+  outline-offset: 2px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* الهاتف: شريط واحد، أصغر، بدون التفاف */
+@media (max-width: 640px) {
+  .pm-topbar {
+    gap: 6px !important;
+    padding-block: 4px !important;
+    padding-inline: 8px !important;
+    min-height: 36px !important;
+    font-size: 11px !important;
+  }
+  .pm-topbar .pm-brand { gap: 0 !important; }
+  .pm-topbar .pm-brand-text { display: none !important; }
+  .pm-topbar .pm-sep { display: none !important; }
+  .pm-topbar .pm-project-btn {
+    max-width: 34vw !important;
+    padding-inline: 6px !important;
+    padding-block: 4px !important;
+    gap: 4px !important;
+    min-height: 28px !important;
+  }
+  .pm-topbar .pm-project-icon { width: 18px !important; height: 18px !important; border-radius: 5px !important; }
+  .pm-topbar .pm-project-caret { display: none !important; }
+  .pm-topbar .pm-title { font-size: 11px !important; max-width: 24vw !important; }
+  .pm-topbar .pm-page-count {
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
+  .pm-topbar .pm-actions { gap: 4px !important; }
+  .pm-topbar .pm-nav-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+  }
+  .pm-topbar .pm-export-btn {
+    height: 28px !important;
+    min-height: 28px !important;
+    padding-inline: 7px !important;
+    gap: 0 !important;
+  }
+  .pm-topbar .pm-export-label { display: none !important; }
+  .pm-topbar button {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .pm-topbar .pm-page-count { display: none !important; }
+  .pm-topbar .pm-project-btn { max-width: 42vw !important; }
+}
+@media print {
+  body { background: #fff; }
+  header, p { display: none !important; }
+  main { display: block !important; padding: 0 !important; }
+  .pdf-page { box-shadow: none !important; break-after: page; page-break-after: always; }
+}
