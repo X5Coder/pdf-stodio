@@ -759,7 +759,7 @@ function EmptyEngine({ onNewProject }) {
         <div>
           <h1 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 6px', color: '#f4f4f5' }}>لا توجد مشاريع بعد</h1>
           <p style={{ fontSize: 12, color: '#8b8b96', margin: 0, lineHeight: 1.9 }}>
-            اضغط <b>+</b> لإنشاء مشروع جديد.<br />لا يتم فتح أي مشروع أو صفحة تلقائيًا — أنت من يقرر متى تنشئ.
+            اضغط <b>+</b> لإنشاء مشروعك الأول فقط.
           </p>
         </div>
       </main>

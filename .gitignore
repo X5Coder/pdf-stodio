@@ -48,5 +48,8 @@ desktop.ini
 nul
 NUL
 
+# Backups (zip archives)
+backup/*.zip
+
 # User projects — محتوى خاص بالمستخدم، لا يُنشر على GitHub أبدًا
 projects/
